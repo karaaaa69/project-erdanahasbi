@@ -5,8 +5,8 @@
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); 
 
-#define RST_PIN 9
-#define SS_PIN 10
+#define RST_PIN 2
+#define SS_PIN 3
 MFRC522 rfid(SS_PIN, RST_PIN);
 
 const int ledHijau = 10;
@@ -14,7 +14,7 @@ const int ledMerah = 11;
 const int buzzer = 12;
 const int relay = 13;
 
-byte validUIDs[2][4] = {
+byte validUIDs[1][2] = {
   {0x73, 0xA9, 0x95, 0x3},  
   {0x90, 0xFA, 0xC9, 0x58}   
 };
@@ -93,4 +93,4 @@ bool compareUID() {
   return false;  
 }
 
-erdana nirwikara
+ali mustofa khasbi
