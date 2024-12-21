@@ -1,0 +1,94 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <SPI.h>
+#include <MFRC522.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2); 
+
+#define RST_PIN 9
+#define SS_PIN 10
+MFRC522 rfid(SS_PIN, RST_PIN);
+
+const int ledHijau = 5;
+const int ledMerah = 3;
+const int buzzer = 4;
+const int relay = 6;
+
+byte validUIDs[2][4] = {
+  {0x73, 0xA9, 0x95, 0x3},  
+  {0x90, 0xFA, 0xC9, 0x58}   
+};
+
+void setup() {
+  pinMode(ledHijau, OUTPUT);
+  pinMode(ledMerah, OUTPUT);
+  pinMode(buzzer, OUTPUT);
+  pinMode(relay, OUTPUT);
+  
+  lcd.init();
+  lcd.backlight();
+  
+  SPI.begin();
+  rfid.PCD_Init();
+  
+  lcd.setCursor(0, 0);
+  lcd.print("SCAN KARTU ANDA");
+  digitalWrite(relay, LOW); 
+}
+
+void loop() {
+  if (!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial()) {
+    return;
+  }
+
+  if (compareUID()) {
+  
+    digitalWrite(ledHijau, HIGH);  
+    digitalWrite(ledMerah, LOW);  
+    digitalWrite(relay, HIGH);     
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("SELAMAT DATANG"); 
+    tone(buzzer, 5000, 500);       
+    delay(5000);                   
+    digitalWrite(relay, LOW);     
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("SCAN KARTU ANDA");
+    digitalWrite(ledHijau, LOW);
+    digitalWrite(ledMerah, LOW);
+  } else {
+
+    digitalWrite(ledHijau, LOW);  
+    digitalWrite(ledMerah, HIGH); 
+    digitalWrite(relay, LOW);     
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("KARTUMU SALAH");    
+    tone(buzzer, 500, 500);       
+    delay(2000);                   
+   
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("SCAN KARTU ANDA");
+    digitalWrite(ledMerah, LOW);  
+  }
+  
+  rfid.PICC_HaltA();  
+}
+
+bool compareUID() {
+  for (byte i = 0; i < 2; i++) { 
+    bool match = true;
+    for (byte j = 0; j < 4; j++) {
+      if (rfid.uid.uidByte[j] != validUIDs[i][j]) {
+        match = false;
+        break;
+      }
+    }
+    if (match) {
+      return true;
+    }
+  }
+  return false;  
+}
